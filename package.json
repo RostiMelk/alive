@@ -1,0 +1,28 @@
+{
+  "name": "alive-sh",
+  "version": "0.0.1",
+  "description": "Status pages from the terminal",
+  "type": "module",
+  "bin": {
+    "alive": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "src"
+  ],
+  "keywords": [
+    "status",
+    "statuspage",
+    "cli",
+    "terminal",
+    "uptime",
+    "monitoring"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
