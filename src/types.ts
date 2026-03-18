@@ -46,6 +46,7 @@ export type SummaryResponse = {
   status: { indicator: OverallIndicator; description: string };
   components: Component[];
   incidents?: Incident[];
+  uptime?: Map<string, number>;
 };
 
 export type ServiceEntry = {

@@ -11,6 +11,25 @@ import {
 } from "./status.ts";
 import type { SummaryResponse } from "./types.ts";
 
+const UPTIME_COL_WIDTH = 13; // "99.38% uptime"
+
+function formatUptimeCol(
+  uptime: Map<string, number> | undefined,
+  componentId: string,
+): string {
+  if (!uptime?.size) return "";
+  const pct = uptime.get(componentId);
+  if (pct === undefined) return `  ${" ".repeat(UPTIME_COL_WIDTH)}`;
+  return `  ${c.dim}${rpad(pct + "% uptime", UPTIME_COL_WIDTH)}${c.reset}`;
+}
+
+function averageUptime(uptime: Map<string, number>): number {
+  const values = [...uptime.values()];
+  return (
+    Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100
+  );
+}
+
 export function renderDetail(data: SummaryResponse): void {
   const { page, status, components, incidents = [] } = data;
 
@@ -28,8 +47,12 @@ export function renderDetail(data: SummaryResponse): void {
     ...showcased.map((comp) => elapsed(comp.updated_at).length),
     5,
   );
-  const totalWidth = 2 + 1 + 1 + nameWidth + 2 + labelWidth + 2 + ageWidth;
-  const lineWidth = Math.max(totalWidth, 52);
+  const hasUptime = !!data.uptime?.size;
+  const uptimeWidth = hasUptime ? UPTIME_COL_WIDTH + 2 : 0;
+  const lineWidth = Math.max(
+    4 + nameWidth + 2 + labelWidth + 2 + uptimeWidth + ageWidth,
+    52,
+  );
 
   const oc = overallColor(status.indicator);
   const oi = overallIcon(status.indicator);
@@ -51,7 +74,7 @@ export function renderDetail(data: SummaryResponse): void {
       const label = componentLabel(comp.status);
       const age = elapsed(comp.updated_at);
       console.log(
-        `  ${col}${icon}${c.reset} ${pad(comp.name, nameWidth)}  ${col}${pad(label, labelWidth)}${c.reset}  ${c.dim}${rpad(age, ageWidth)}${c.reset}`,
+        `  ${col}${icon}${c.reset} ${pad(comp.name, nameWidth)}  ${col}${pad(label, labelWidth)}${c.reset}${formatUptimeCol(data.uptime, comp.id)}  ${c.dim}${rpad(age, ageWidth)}${c.reset}`,
       );
     }
     console.log();
@@ -132,8 +155,11 @@ export function renderOverviewRow(
     incidentCount > 0
       ? `  ${c.yellow}${incidentCount} incident${incidentCount > 1 ? "s" : ""}${c.reset}`
       : "";
+  const uptimeSuffix = data.uptime?.size
+    ? `  ${c.dim}${averageUptime(data.uptime)}%${c.reset}`
+    : "";
 
   console.log(
-    `  ${oc}${oi}${c.reset} ${pad(name, nameWidth)}  ${oc}${desc}${c.reset}${incidentSuffix}`,
+    `  ${oc}${oi}${c.reset} ${pad(name, nameWidth)}  ${oc}${desc}${c.reset}${uptimeSuffix}${incidentSuffix}`,
   );
 }
